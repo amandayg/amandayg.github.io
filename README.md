@@ -1,1 +1,1 @@
-# amandayg.github.io
+# CPLN611 Final Project
