@@ -16,15 +16,23 @@ var Stamen_TonerLite = L.tileLayer('http://{s}.basemaps.cartocdn.com/light_nolab
 /* =====================
 setlist.fm api: c78418f6-21c9-4878-80bd-f28f32fbb934
 songkick api: 2dleBwWTZC8F4EGh
+
+functions:
+1.search artist by name and get artist id
+2.get past event and location
+3.get future event by artist/venue/...
+4.
 ===================== */
 var songkick_api= '2dleBwWTZC8F4EGh';
 var artistName = document.getElementById("artist");
 var artistID;
 var pastVenues = {};
+var lat=[];
+var lng=[];
 
 
 var searchArtist = function(artistName) {
-    $.ajax({
+     return $.ajax({
       type: "GET",
       url: "http://api.songkick.com/api/3.0/search/artists.json",
       data: {
@@ -39,33 +47,36 @@ var searchArtist = function(artistName) {
   });
 };
 
-  // var geocoder = function(geocoderurl){
-  //   return $.ajax(geocoderurl).done(function(data){
-  //     console.log(data);
-  //     destination = data.features[0];
-  //     console.log(destination);
-  //   });
-  // };
-
 //Ref: https://github.com/odelevingne/gigLister/blob/master/src/scripts/songkick.js
 //https://github.com/xsaardo/Setlist-fm-Playlists/blob/master/search.js
 
-var getPastVenues = function(artistID){
+//Issue: Pagination(how to get all pages)
 
+var getPastVenues = function(artistID){
+  $.ajax({
+    type: "GET",
+    url:"http://api.songkick.com/api/3.0/artists/" + artistID + "&page= "+ "/gigography.json",
+    data: {
+      query: artistID,
+      apikey: songkick_api
+    }
+  }).done(function(data){
+    console.log(data);
+
+    lat = _.map(data.resultsPage.results.event, function(venue, key){
+      return venue.location.lat;
+}) ;
+   lng = _.map(data.resultsPage.results.event, function(venue, key){
+  return venue.location.lng;
+});
+console.log(lat,lng);
+var marker = L.circleMarker([lat, lng], {color: "blue"}).addTo(map);
+  });
 };
 
     $("#past").click(function(e) {
         artistName= $('#artist-name').val();
-        searchArtist(artistName);
+        searchArtist(artistName).done(function(){
+          getPastVenues(artistID);
+        });
     });
-
-
-// $("#past").click(function(e) {
-//   var artist = $('#artist-name').val();
-//   var venueurl = venueAPI(artist);
-//   venueurl = JSON.stringify();
-//   // geocoder(addressurl).done(function() {
-//   //   var routeurl = routeAPI(JSON.stringify(getRouteJson(currentLocation, destination)));
-//   //   getRoute(routeurl);
-//   // });
-// });
